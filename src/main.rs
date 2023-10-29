@@ -1,10 +1,10 @@
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
+mod player;
 mod sprite;
-mod world;
+// mod world;
 
 pub const DELTA_TIME: f64 = 1.0 / 60.0;
 
@@ -23,18 +23,20 @@ fn main() {
 		.unwrap();
 
 	let mut canvas = window.into_canvas().build().unwrap();
+	canvas.set_logical_size(1000, 1000).unwrap();
+
 	let mut event_pump = sdl_context.event_pump().unwrap();
 
 	let texture_creator = canvas.texture_creator();
 
-	let asteroid_sprite = sprite::Sprite::new(
-		&texture_creator,
-		ASTEROID_TEXTURE,
-		Some(sdl2::rect::Rect::new(32, 0, 48, 48)),
-	);
-	let spaceship_sprite = sprite::Sprite::new(&texture_creator, SPACESHIP_TEXTURE, None);
+	let asteroid_texture = sprite::Sprite::load_texture(&texture_creator, ASTEROID_TEXTURE);
+	let spaceship_texture = sprite::Sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
 
-	let mut world = world::World::new(1000, 1000);
+	let asteroid_sprite =
+		sprite::Sprite::new(&asteroid_texture, Some(Rect::new(32, 0, 48, 48)), 48, 48);
+	let mut spaceship_sprite = sprite::Sprite::new(&spaceship_texture, None, 50, 50);
+
+	let mut player = player::Player::new(&mut spaceship_sprite);
 
 	// Game Variables
 
@@ -48,25 +50,55 @@ fn main() {
 		for event in event_pump.poll_iter() {
 			match event {
 				Event::Quit { .. } => should_exit = true,
+				Event::Window { win_event, .. } => match win_event {
+					_ => {}
+				},
+				Event::KeyDown {
+					keycode: Some(Keycode::W),
+					..
+				} => player.up = true,
+				Event::KeyDown {
+					keycode: Some(Keycode::A),
+					..
+				} => player.left = true,
+				Event::KeyDown {
+					keycode: Some(Keycode::S),
+					..
+				} => player.down = true,
+				Event::KeyDown {
+					keycode: Some(Keycode::D),
+					..
+				} => player.right = true,
+
+				Event::KeyUp {
+					keycode: Some(Keycode::W),
+					..
+				} => player.up = false,
+				Event::KeyUp {
+					keycode: Some(Keycode::A),
+					..
+				} => player.left = false,
+				Event::KeyUp {
+					keycode: Some(Keycode::S),
+					..
+				} => player.down = false,
+				Event::KeyUp {
+					keycode: Some(Keycode::D),
+					..
+				} => player.right = false,
 				_ => {}
 			}
 		}
 
 		{
-			// canvas
-			// 	.copy_ex(
-			// 		&asteroid_sprite.texture,
-			// 		asteroid_sprite.rect,
-			// 		None,
-			// 		asteroid_sprite.angle,
-			// 		None,
-			// 		false,
-			// 		false,
-			// 	)
-			// 	.unwrap();
-			// canvas.present();
-		}
+			player.update(0.1);
 
-		world.render(&mut canvas);
+			//Clear the screen
+			canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+			canvas.clear();
+
+			player.render(&mut canvas);
+			canvas.present();
+		}
 	}
 }
