@@ -1,5 +1,7 @@
 use sdl2::render::WindowCanvas;
 
+pub const PI: f64 = 3.1415926535897932384626433832795028841971693993751058209749445923078164062;
+
 pub struct Player<'a> {
 	sprite: &'a mut crate::sprite::Sprite<'a>,
 	pub up: bool,
@@ -40,34 +42,39 @@ impl<'a> Player<'a> {
 			direction.1 += 1.0;
 		}
 
-		if direction.0 == 0.0 && direction.1 == 0.0 {
-			return;
+		if direction.0 != 0.0 || direction.1 != 0.0 {
+			let length = f64::abs(f64::sqrt(
+				(direction.0 * direction.0) + (direction.1 * direction.1),
+			));
+
+			let movement: (f64, f64) = (
+				(direction.0 / length) * self.speed * time_step,
+				(direction.1 / length) * self.speed * time_step,
+			);
+
+			self.sprite.update_position(movement.0, movement.1);
 		}
 
-		let length = f64::abs(f64::sqrt(
-			(direction.0 * direction.0) + (direction.1 * direction.1),
-		));
+		// Rotate towards the mouse.
+		// https://stackoverflow.com/a/507879
+		self.sprite.rotation = f64::atan2(
+			self.mouse_position.x as f64 - self.sprite.get_position().0,
+			(self.mouse_position.y as f64 - self.sprite.get_position().1) * -1.0,
+		) * 180.0 / PI;
+	}
 
-		let movement: (f64, f64) = (
-			(direction.0 / length) * self.speed * time_step,
-			(direction.1 / length) * self.speed * time_step,
-		);
+	#[inline]
+	pub fn set_position(&mut self, x: f64, y: f64) {
+		self.sprite.set_position(x, y);
+	}
 
-		self.sprite.update_position(movement.0, movement.1);
+	#[inline]
+	pub fn set_mouse_position(&mut self, x: i32, y: i32) {
+		self.mouse_position = sdl2::rect::Point::new(x, y);
 	}
 
 	#[inline]
 	pub fn render(&self, canvas: &mut WindowCanvas) {
-		canvas
-			.copy_ex(
-				self.sprite.texture,
-				self.sprite.src_rect,
-				self.sprite.get_dst_rect(),
-				self.sprite.rotation,
-				None,
-				false,
-				false,
-			)
-			.unwrap();
+		self.sprite.render(canvas);
 	}
 }

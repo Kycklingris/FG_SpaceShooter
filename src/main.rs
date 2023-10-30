@@ -38,6 +38,8 @@ fn main() {
 
 	let mut player = player::Player::new(&mut spaceship_sprite);
 
+	player.set_position(500.0, 500.0);
+
 	// Game Variables
 
 	let mut should_exit = false;
@@ -53,6 +55,7 @@ fn main() {
 				Event::Window { win_event, .. } => match win_event {
 					_ => {}
 				},
+				Event::MouseMotion { x, y, .. } => player.set_mouse_position(x, y),
 				Event::KeyDown {
 					keycode: Some(Keycode::W),
 					..

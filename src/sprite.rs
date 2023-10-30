@@ -52,6 +52,21 @@ impl<'a> Sprite<'a> {
 		)
 	}
 
+	#[inline]
+	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {
+		canvas
+			.copy_ex(
+				self.texture,
+				self.src_rect,
+				self.get_dst_rect(),
+				self.rotation,
+				None,
+				false,
+				false,
+			)
+			.unwrap();
+	}
+
 	pub fn load_texture<Context>(
 		texture_creator: &'a sdl2::render::TextureCreator<Context>,
 		image_buffer: &[u8],
