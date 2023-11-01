@@ -1,9 +1,9 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
-use sdl2::rect::Rect;
+// use sdl2::rect::Rect;
 
-use rand::prelude::*;
+// use rand::prelude::*;
 
 mod asteroid;
 mod player;
@@ -132,17 +132,55 @@ fn main() {
 
 			for i in asteroids_to_remove.iter().rev() {
 				asteroids.remove(*i);
-				println!("removed asteroid");
 			}
 
+			// Check collisions
+			{
+				// Bullets and asteroids
+				let mut bullets_to_remove = Vec::new();
+				let mut asteroids_to_remove = Vec::new();
+				'bullets: for (i,bullet) in player.bullets.iter().enumerate() {
+					for (j, asteroid) in asteroids.iter().enumerate() {
+						if bullet.sprite.check_circle_overlap(&asteroid.sprite) {
+							bullets_to_remove.push(i);
+
+							if !asteroids_to_remove.contains(&j) {
+								asteroids_to_remove.push(j);
+							}
+
+							continue 'bullets;
+						}
+					}
+				}
+				
+				for i in asteroids_to_remove.iter().rev() {
+					asteroids.remove(*i);
+				}
+				
+				for i in bullets_to_remove.iter().rev() {
+					player.bullets.remove(*i);
+				}
+
+				// Player
+				let mut asteroids_to_remove = Vec::new();
+				for (i, asteroid) in asteroids.iter().enumerate() {
+					if asteroid.sprite.check_circle_overlap(&player.sprite) {
+						asteroids_to_remove.push(i);
+						player.update_health(-1);
+					}
+				}
+
+				for i in asteroids_to_remove.iter().rev() {
+					asteroids.remove(*i);
+				}
+			}
+			
 			// Spawn asteroid?
 			if now.duration_since(last_asteroid) >= asteroids_rate {
 				last_asteroid = now;
 
 				let asteroid = asteroid::Asteroid::new(&asteroid_texture, &mut rng);
 				asteroids.push(asteroid);
-
-				println!("spawned asteroid");
 			}
 
 			//Clear the screen

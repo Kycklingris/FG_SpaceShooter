@@ -1,7 +1,7 @@
 use crate::sprite::Sprite;
 
 pub struct Bullet<'a> {
-	sprite: Sprite<'a>,
+	pub sprite: Sprite<'a>,
 	speed: f64,
 	direction: (f64, f64),
 }

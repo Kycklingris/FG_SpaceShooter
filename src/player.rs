@@ -5,7 +5,7 @@ pub const PI: f64 = 3.1415926535897932384626433832795028841971693993751058209749
 pub mod bullet;
 
 pub struct Player<'a> {
-	sprite: &'a mut crate::sprite::Sprite<'a>,
+	pub sprite: &'a mut crate::sprite::Sprite<'a>,
 	bullet_texture: &'a sdl2::render::Texture<'a>,
 	pub up: bool,
 	pub left: bool,
@@ -15,11 +15,15 @@ pub struct Player<'a> {
 	mouse_position: sdl2::rect::Point,
 	fire_rate: std::time::Duration,
 	last_fire: std::time::Instant,
-	bullets: Vec<bullet::Bullet<'a>>,
+	pub bullets: Vec<bullet::Bullet<'a>>,
+	health: i32,
 }
 
 impl<'a> Player<'a> {
-	pub fn new(sprite: &'a mut crate::sprite::Sprite<'a>, bullet_texture: &'a sdl2::render::Texture<'a>) -> Self {
+	pub fn new(
+		sprite: &'a mut crate::sprite::Sprite<'a>,
+		bullet_texture: &'a sdl2::render::Texture<'a>,
+	) -> Self {
 		Self {
 			sprite,
 			bullet_texture,
@@ -32,6 +36,7 @@ impl<'a> Player<'a> {
 			fire_rate: std::time::Duration::from_secs_f64(0.2),
 			last_fire: std::time::Instant::now(),
 			bullets: Vec::new(),
+			health: 10,
 		}
 	}
 
@@ -98,6 +103,15 @@ impl<'a> Player<'a> {
 	}
 
 	#[inline]
+	pub fn update_health(&mut self, change: i32) {
+		self.health += change;
+
+		if self.health <= 0 {
+			std::process::exit(0);
+		}
+	}
+
+	#[inline]
 	pub fn fire(&mut self, x: i32, y: i32) {
 		let now = std::time::Instant::now();
 
@@ -108,17 +122,19 @@ impl<'a> Player<'a> {
 		self.last_fire = now;
 		let mut direction = (
 			x as f64 - self.sprite.get_position().0,
-			y as f64 - self.sprite.get_position().1
+			y as f64 - self.sprite.get_position().1,
 		);
 
 		let length = f64::sqrt((direction.0 * direction.0) + (direction.1 * direction.1));
 
-		direction = (
-			direction.0 / length,
-			direction.1 / length,
-		);
+		direction = (direction.0 / length, direction.1 / length);
 
-		let bullet = bullet::Bullet::new(self.bullet_texture, self.sprite.get_position(), direction, 500.0);
+		let bullet = bullet::Bullet::new(
+			self.bullet_texture,
+			self.sprite.get_position(),
+			direction,
+			500.0,
+		);
 
 		self.bullets.push(bullet);
 	}
@@ -128,7 +144,7 @@ impl<'a> Player<'a> {
 		for bullet in self.bullets.iter() {
 			bullet.render(canvas);
 		}
-		
+
 		self.sprite.render(canvas);
 	}
 }

@@ -1,13 +1,13 @@
 use rand::prelude::*;
 use sdl2::render::WindowCanvas;
 
-use crate::LOGICAL_HEIGHT;
-use crate::LOGICAL_WIDTH;
+// use crate::LOGICAL_HEIGHT;
+// use crate::LOGICAL_WIDTH;
 use crate::F64_LOGICAL_HEIGHT;
 use crate::F64_LOGICAL_WIDTH;
 
 pub struct Asteroid<'a> {
-	sprite: crate::sprite::Sprite<'a>,
+	pub sprite: crate::sprite::Sprite<'a>,
 	speed: f64,
 	direction: (f64, f64),
 }
@@ -66,6 +66,7 @@ impl<'a> Asteroid<'a> {
 		}
 	}
 
+	#[inline]
 	pub fn update(&mut self, time_step: f64) -> bool {
 		let movement = (
 			self.direction.0 * self.speed * time_step,
@@ -89,6 +90,7 @@ impl<'a> Asteroid<'a> {
 		false
 	}
 
+	#[inline]
 	pub fn render(&self, canvas: &mut WindowCanvas) {
 		self.sprite.render(canvas);
 	}
