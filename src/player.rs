@@ -2,31 +2,45 @@ use sdl2::render::WindowCanvas;
 
 pub const PI: f64 = 3.1415926535897932384626433832795028841971693993751058209749445923078164062;
 
+pub mod bullet;
+
 pub struct Player<'a> {
 	sprite: &'a mut crate::sprite::Sprite<'a>,
+	bullet_texture: &'a sdl2::render::Texture<'a>,
 	pub up: bool,
 	pub left: bool,
 	pub right: bool,
 	pub down: bool,
 	speed: f64,
 	mouse_position: sdl2::rect::Point,
+	fire_rate: std::time::Duration,
+	last_fire: std::time::Instant,
+	bullets: Vec<bullet::Bullet<'a>>,
 }
 
 impl<'a> Player<'a> {
-	pub fn new(sprite: &'a mut crate::sprite::Sprite<'a>) -> Self {
+	pub fn new(sprite: &'a mut crate::sprite::Sprite<'a>, bullet_texture: &'a sdl2::render::Texture<'a>) -> Self {
 		Self {
 			sprite,
+			bullet_texture,
 			up: false,
 			left: false,
 			right: false,
 			down: false,
 			speed: 1.0,
 			mouse_position: sdl2::rect::Point::new(0, 0),
+			fire_rate: std::time::Duration::from_secs_f64(1.0),
+			last_fire: std::time::Instant::now(),
+			bullets: Vec::new(),
 		}
 	}
 
 	#[inline]
 	pub fn update(&mut self, time_step: f64) {
+		for bullet in self.bullets.iter_mut() {
+			bullet.update(time_step);
+		}
+
 		let mut direction = (0.0, 0.0);
 
 		if self.up {
@@ -42,6 +56,7 @@ impl<'a> Player<'a> {
 			direction.1 += 1.0;
 		}
 
+		// Move the player
 		if direction.0 != 0.0 || direction.1 != 0.0 {
 			let length = f64::abs(f64::sqrt(
 				(direction.0 * direction.0) + (direction.1 * direction.1),
@@ -56,7 +71,7 @@ impl<'a> Player<'a> {
 		}
 
 		// Rotate towards the mouse.
-		// https://stackoverflow.com/a/507879
+		// https://stackoverflow.com/a/6247163
 		self.sprite.rotation = f64::atan2(
 			self.mouse_position.x as f64 - self.sprite.get_position().0,
 			(self.mouse_position.y as f64 - self.sprite.get_position().1) * -1.0,
@@ -74,7 +89,37 @@ impl<'a> Player<'a> {
 	}
 
 	#[inline]
+	pub fn fire(&mut self, x: i32, y: i32) {
+		let now = std::time::Instant::now();
+
+		if now.duration_since(self.last_fire) < self.fire_rate {
+			return;
+		}
+
+		self.last_fire = now;
+		let mut direction = (
+			x as f64 - self.sprite.get_position().0,
+			y as f64 - self.sprite.get_position().1
+		);
+
+		let length = f64::sqrt((direction.0 * direction.0) + (direction.1 * direction.1));
+
+		direction = (
+			direction.0 / length,
+			direction.1 / length,
+		);
+
+		let bullet = bullet::Bullet::new(self.bullet_texture, self.sprite.get_position(), direction, 5.0);
+
+		self.bullets.push(bullet);
+	}
+
+	#[inline]
 	pub fn render(&self, canvas: &mut WindowCanvas) {
+		for bullet in self.bullets.iter() {
+			bullet.render(canvas);
+		}
+		
 		self.sprite.render(canvas);
 	}
 }

@@ -1,15 +1,16 @@
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 use sdl2::rect::Rect;
 
 mod player;
 mod sprite;
-// mod world;
 
 pub const DELTA_TIME: f64 = 1.0 / 60.0;
 
 pub const ASTEROID_TEXTURE: &[u8] = include_bytes!("assets/Asteroids#01.png");
 pub const SPACESHIP_TEXTURE: &[u8] = include_bytes!("assets/Spaceship#01(24x24).png");
+pub const BULLET_TEXTURE: &[u8] = include_bytes!("assets/Bullet.png");
 
 fn main() {
 	let sdl_context = sdl2::init().unwrap();
@@ -31,12 +32,13 @@ fn main() {
 
 	let asteroid_texture = sprite::Sprite::load_texture(&texture_creator, ASTEROID_TEXTURE);
 	let spaceship_texture = sprite::Sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
+	let bullet_texture = sprite::Sprite::load_texture(&texture_creator, BULLET_TEXTURE);
 
 	let asteroid_sprite =
 		sprite::Sprite::new(&asteroid_texture, Some(Rect::new(32, 0, 48, 48)), 48, 48);
 	let mut spaceship_sprite = sprite::Sprite::new(&spaceship_texture, None, 50, 50);
 
-	let mut player = player::Player::new(&mut spaceship_sprite);
+	let mut player = player::Player::new(&mut spaceship_sprite, &bullet_texture);
 
 	player.set_position(500.0, 500.0);
 
@@ -56,6 +58,12 @@ fn main() {
 					_ => {}
 				},
 				Event::MouseMotion { x, y, .. } => player.set_mouse_position(x, y),
+				Event::MouseButtonDown {
+					mouse_btn: MouseButton::Left,
+					x,
+					y,
+					..
+				} => player.fire(x, y),
 				Event::KeyDown {
 					keycode: Some(Keycode::W),
 					..

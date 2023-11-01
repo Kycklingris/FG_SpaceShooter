@@ -53,6 +53,13 @@ impl<'a> Sprite<'a> {
 	}
 
 	#[inline]
+	pub fn check_circle_overlap(&self, other: &Self) -> bool {
+		
+		
+		false
+	}
+
+	#[inline]
 	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {
 		canvas
 			.copy_ex(
