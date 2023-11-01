@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 sdl2 = { version = "0.35.2", features = ["bundled", "static-link"] }
 image = {version = "0.24", default-features = false, features = ["png"]}
+rand = "0.8.5"

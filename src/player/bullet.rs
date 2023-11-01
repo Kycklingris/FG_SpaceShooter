@@ -23,13 +23,26 @@ impl<'a> Bullet<'a> {
 		}
 	}
 
-	pub fn update(&mut self, time_step: f64) {
+	#[inline]
+	pub fn update(&mut self, time_step: f64) -> bool {
 		let movement = (
 			self.direction.0 * self.speed * time_step,
 			self.direction.1 * self.speed * time_step,
 		);
 
 		self.sprite.update_position(movement.0, movement.1);
+
+		let new_position = self.sprite.get_position();
+
+		if new_position.0 < -100.0
+			|| new_position.0 > crate::F64_LOGICAL_WIDTH + 100.0
+			|| new_position.1 < -100.0
+			|| new_position.1 > crate::F64_LOGICAL_HEIGHT + 100.0
+		{
+			return true;
+		}
+
+		false
 	}
 
 	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {

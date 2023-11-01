@@ -27,9 +27,9 @@ impl<'a> Player<'a> {
 			left: false,
 			right: false,
 			down: false,
-			speed: 1.0,
+			speed: 150.0,
 			mouse_position: sdl2::rect::Point::new(0, 0),
-			fire_rate: std::time::Duration::from_secs_f64(1.0),
+			fire_rate: std::time::Duration::from_secs_f64(0.2),
 			last_fire: std::time::Instant::now(),
 			bullets: Vec::new(),
 		}
@@ -37,10 +37,19 @@ impl<'a> Player<'a> {
 
 	#[inline]
 	pub fn update(&mut self, time_step: f64) {
-		for bullet in self.bullets.iter_mut() {
-			bullet.update(time_step);
+		// Handle bullets
+		let mut to_remove = Vec::new();
+		for (i, bullet) in self.bullets.iter_mut().enumerate() {
+			if bullet.update(time_step) {
+				to_remove.push(i);
+			}
 		}
 
+		for i in to_remove.iter().rev() {
+			self.bullets.remove(*i);
+		}
+
+		// Get input direction
 		let mut direction = (0.0, 0.0);
 
 		if self.up {
@@ -109,7 +118,7 @@ impl<'a> Player<'a> {
 			direction.1 / length,
 		);
 
-		let bullet = bullet::Bullet::new(self.bullet_texture, self.sprite.get_position(), direction, 5.0);
+		let bullet = bullet::Bullet::new(self.bullet_texture, self.sprite.get_position(), direction, 500.0);
 
 		self.bullets.push(bullet);
 	}
