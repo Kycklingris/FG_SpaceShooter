@@ -107,6 +107,7 @@ impl<'a> Player<'a> {
 		self.health += change;
 
 		if self.health <= 0 {
+			println!("Dead!");
 			std::process::exit(0);
 		}
 	}

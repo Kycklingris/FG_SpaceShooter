@@ -2,13 +2,11 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::render::BlendMode;
-// use sdl2::rect::Rect;
-
-// use rand::prelude::*;
 
 mod asteroid;
 mod player;
 mod sprite;
+mod wave;
 
 pub const ASTEROID_TEXTURE: &[u8] = include_bytes!("assets/Asteroids#01.png");
 pub const SPACESHIP_TEXTURE: &[u8] = include_bytes!("assets/Spaceship#01(24x24).png");
@@ -53,14 +51,23 @@ fn main() {
 
 	// Game Variables
 
+	let mut waves = [
+		wave::Wave::new(20, 10, 5.0, 5.0),
+		wave::Wave::new(30, 15, 5.0, 5.0),
+		wave::Wave::new(50, 25, 7.0, 5.0),
+		wave::Wave::new(75, 37, 10.0, 5.0),
+		wave::Wave::new(100, 50, 10.0, 5.0),
+	];
+	let mut current_wave_index: usize = 0;
+
 	let mut rng = rand::thread_rng();
 
 	let mut player = player::Player::new(&mut spaceship_sprite, &bullet_texture);
 	player.set_position(F64_LOGICAL_WIDTH / 2.0, F64_LOGICAL_HEIGHT / 2.0);
 
-	let mut asteroids_rate = std::time::Duration::from_secs_f64(0.5);
-	let mut last_asteroid = std::time::Instant::now();
 	let mut asteroids: Vec<asteroid::Asteroid<'_>> = Vec::new();
+
+	waves[current_wave_index].start(&asteroid_texture, &mut rng, &mut asteroids);
 
 	let mut last_update = std::time::Instant::now();
 
@@ -140,6 +147,17 @@ fn main() {
 				asteroids.remove(*i);
 			}
 
+			// Handle wave.
+			{
+				if waves[current_wave_index].update(&asteroid_texture, &mut rng, &mut asteroids) {
+					if current_wave_index < waves.len()-1 {
+						current_wave_index += 1;
+					} 
+
+					waves[current_wave_index].start(&asteroid_texture, &mut rng, &mut asteroids);
+				}
+			}
+
 			// Check collisions
 			{
 				// Bullets and asteroids
@@ -181,13 +199,7 @@ fn main() {
 				}
 			}
 			
-			// Spawn asteroid?
-			if now.duration_since(last_asteroid) >= asteroids_rate {
-				last_asteroid = now;
-
-				let asteroid = asteroid::Asteroid::new(&asteroid_texture, &mut rng);
-				asteroids.push(asteroid);
-			}
+			
 
 			//Clear the screen
 			canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
