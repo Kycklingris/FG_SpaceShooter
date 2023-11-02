@@ -56,7 +56,7 @@ impl<'a> Asteroid<'a> {
 
 		let speed = rng.gen_range(50.0..=400.0);
 
-		let mut sprite = crate::sprite::Sprite::new(texture, Some(sdl2::rect::Rect::new(32, 0, 48, 48)), 64, 64);		
+		let mut sprite = crate::sprite::Sprite::new(texture, None, 64, 64);		
 		sprite.set_position(position.0, position.1);
 
 		Self {

@@ -1,6 +1,7 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
+use sdl2::render::BlendMode;
 // use sdl2::rect::Rect;
 
 // use rand::prelude::*;
@@ -39,9 +40,14 @@ fn main() {
 
 	let texture_creator = canvas.texture_creator();
 
-	let asteroid_texture = sprite::Sprite::load_texture(&texture_creator, ASTEROID_TEXTURE);
-	let spaceship_texture = sprite::Sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
-	let bullet_texture = sprite::Sprite::load_texture(&texture_creator, BULLET_TEXTURE);
+	let mut asteroid_texture = sprite::Sprite::load_texture(&texture_creator, ASTEROID_TEXTURE);
+	asteroid_texture.set_blend_mode(BlendMode::Blend);
+
+	let mut spaceship_texture = sprite::Sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
+	spaceship_texture.set_blend_mode(BlendMode::Blend);
+	
+	let mut bullet_texture = sprite::Sprite::load_texture(&texture_creator, BULLET_TEXTURE);
+	bullet_texture.set_blend_mode(BlendMode::Blend);
 
 	let mut spaceship_sprite = sprite::Sprite::new(&spaceship_texture, None, 50, 50);
 
