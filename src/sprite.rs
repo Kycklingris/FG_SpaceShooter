@@ -1,27 +1,19 @@
 use sdl2::pixels::PixelFormatEnum;
 
-pub struct Sprite<'a> {
-	pub texture: &'a sdl2::render::Texture<'a>,
-	pub src_rect: Option<sdl2::rect::Rect>,
+pub struct Collider {
 	width: u32,
 	height: u32,
 	position: (f64, f64),
 	pub rotation: f64,
 }
 
-impl<'a> Sprite<'a> {
-	pub fn new(
-		texture: &'a sdl2::render::Texture<'a>,
-		src_rect: Option<sdl2::rect::Rect>,
-		width: u32,
-		height: u32,
-	) -> Self {
+
+impl Collider {
+	pub fn new(width: u32, height: u32) -> Self {
 		Self {
-			texture,
-			src_rect,
 			width,
 			height,
-			position: (0.0, 0.0),
+			position: (0.0,0.0),
 			rotation: 0.0,
 		}
 	}
@@ -69,12 +61,16 @@ impl<'a> Sprite<'a> {
 		false
 	}
 
-	#[inline(always)]
-	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {
+	#[inline]
+	pub fn render<'a>(
+		&self,
+		canvas: &mut sdl2::render::WindowCanvas,
+		texture: &'a sdl2::render::Texture<'a>,
+	) {
 		canvas
 			.copy_ex(
-				self.texture,
-				self.src_rect,
+				texture,
+				None,
 				self.get_dst_rect(),
 				self.rotation,
 				None,
@@ -83,28 +79,27 @@ impl<'a> Sprite<'a> {
 			)
 			.unwrap();
 	}
+}
 
-	pub fn load_texture<Context>(
-		texture_creator: &'a sdl2::render::TextureCreator<Context>,
-		image_buffer: &[u8],
-	) -> sdl2::render::Texture<'a> {
-		let data =
-			image::load_from_memory_with_format(image_buffer, image::ImageFormat::Png).unwrap();
+pub fn load_texture<'a, Context>(
+	texture_creator: &'a sdl2::render::TextureCreator<Context>,
+	image_buffer: &[u8],
+) -> sdl2::render::Texture<'a> {
+	let data = image::load_from_memory_with_format(image_buffer, image::ImageFormat::Png).unwrap();
 
-		let data = data.into_rgba8();
+	let data = data.into_rgba8();
 
-		let mut texture = texture_creator
-			.create_texture_static(
-				PixelFormatEnum::RGBA32, // I could not tell you why RGBA32 works but RGBA8888 only gives the red channel.
-				data.width(),
-				data.height(),
-			)
-			.unwrap();
+	let mut texture = texture_creator
+		.create_texture_static(
+			PixelFormatEnum::RGBA32, // I could not tell you why RGBA32 works but RGBA8888 only gives the red channel.
+			data.width(),
+			data.height(),
+		)
+		.unwrap();
 
-		let width = data.width() as usize;
+	let width = data.width() as usize;
 
-		texture.update(None, data.as_raw(), width * 4).unwrap();
+	texture.update(None, data.as_raw(), width * 4).unwrap();
 
-		texture
-	}
+	texture
 }

@@ -40,16 +40,14 @@ fn main() {
 
 	let texture_creator = canvas.texture_creator();
 
-	let mut asteroid_texture = sprite::Sprite::load_texture(&texture_creator, ASTEROID_TEXTURE);
+	let mut asteroid_texture = sprite::load_texture(&texture_creator, ASTEROID_TEXTURE);
 	asteroid_texture.set_blend_mode(BlendMode::Blend);
 
-	let mut spaceship_texture = sprite::Sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
+	let mut spaceship_texture = sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
 	spaceship_texture.set_blend_mode(BlendMode::Blend);
 
-	let mut bullet_texture = sprite::Sprite::load_texture(&texture_creator, BULLET_TEXTURE);
+	let mut bullet_texture = sprite::load_texture(&texture_creator, BULLET_TEXTURE);
 	bullet_texture.set_blend_mode(BlendMode::Blend);
-
-	let mut spaceship_sprite = sprite::Sprite::new(&spaceship_texture, None, 50, 50);
 
 	// Game Variables
 
@@ -64,12 +62,13 @@ fn main() {
 
 	let mut rng = rand::thread_rng();
 
-	let mut player = player::Player::new(&mut spaceship_sprite, &bullet_texture);
+	let mut player = player::Player::new(&spaceship_texture, 50, 50);
 	player.set_position(F64_LOGICAL_WIDTH / 2.0, F64_LOGICAL_HEIGHT / 2.0);
 
-	let mut asteroids: Vec<asteroid::Asteroid<'_>> = Vec::new();
+	let mut asteroids = asteroid::Asteroids::new(&asteroid_texture);
+	let mut bullets = player::bullet::Bullets::new(&bullet_texture);
 
-	waves[current_wave_index].start(&asteroid_texture, &mut rng, &mut asteroids);
+	waves[current_wave_index].start(&mut rng, &mut asteroids);
 
 	let mut last_update = std::time::Instant::now();
 
@@ -96,7 +95,7 @@ fn main() {
 					x,
 					y,
 					..
-				} => player.fire(x, y),
+				} => player.fire(x, y, &mut bullets),
 				Event::KeyDown {
 					keycode: Some(Keycode::W),
 					..
@@ -141,59 +140,56 @@ fn main() {
 			last_update = now;
 
 			if cfg!(feature = "benchmark") {
-				player.fire(LOGICAL_WIDTH as i32 / 2, 0);
+				player.fire(LOGICAL_WIDTH as i32 / 2, 0, &mut bullets);
 			}
 
 			player.update(time_step);
+			asteroids.update(time_step);
+			bullets.update(time_step);
 
-			let mut asteroids_to_remove = Vec::new();
-			let mut bullets_to_remove = Vec::new();
-			'asteroid: for (i, asteroid) in asteroids.iter_mut().enumerate() {
-				// Update asteroid position, and check if out of bounds.
-				if asteroid.update(time_step) {
-					asteroids_to_remove.push(i);
-					continue 'asteroid;
-				}
+			// Check collisions.
+			{
+				let mut bullets_to_remove = Vec::new();
+				let mut asteroids_to_remove = Vec::new();
 
-				// Check asteroid collides with any bullets.
-				for (j, bullet) in player.bullets.iter().enumerate() {
-					if bullet.sprite.check_circle_overlap(&asteroid.sprite) {
-						if bullets_to_remove.contains(&j) {
-							continue;
+				'asteroid: for (asteroid_index, asteroid_collider) in
+					asteroids.colliders.iter().enumerate()
+				{
+					for (bullet_index, bullet_collider) in bullets.colliders.iter().enumerate() {
+						if !bullets_to_remove.contains(&bullet_index)
+							&& asteroid_collider.check_circle_overlap(&bullet_collider)
+						{
+							bullets_to_remove.push(bullet_index);
+							asteroids_to_remove.push(asteroid_index);
+							continue 'asteroid;
 						}
-						
-						asteroids_to_remove.push(i);
-						bullets_to_remove.push(j);
-
-						continue 'asteroid;
+					}
+					
+					if asteroid_collider.check_circle_overlap(&player.collider) {
+						asteroids_to_remove.push(asteroid_index);
+						player.update_health(-1);
 					}
 				}
 
-				// Check for collision with player.
-				if asteroid.sprite.check_circle_overlap(&player.sprite) {
-					asteroids_to_remove.push(i);
-					player.update_health(-1);
+				for i in bullets_to_remove.iter() {
+					bullets.remove_at(*i);
 				}
-			}
 
-			for i in asteroids_to_remove.iter().rev() {
-				asteroids.remove(*i);
-			}
-
-			for i in bullets_to_remove.iter().rev() {
-				player.bullets.remove(*i);
+				for i in asteroids_to_remove.iter() {
+					asteroids.remove_at(*i);
+				}
 			}
 
 			// Handle wave.
 			{
-				if waves[current_wave_index].update(&asteroid_texture, &mut rng, &mut asteroids) {
+				if waves[current_wave_index].update(&mut rng, &mut asteroids) {
 					if current_wave_index < waves.len() - 1 {
 						current_wave_index += 1;
 					} else if cfg!(feature = "benchmark") {
 						should_exit = true;
 					}
 
-					waves[current_wave_index].start(&asteroid_texture, &mut rng, &mut asteroids);
+					waves[current_wave_index].start(&mut rng, &mut asteroids);
 				}
 			}
 
@@ -201,15 +197,13 @@ fn main() {
 			canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
 			canvas.clear();
 
+			bullets.render(&mut canvas);
+			asteroids.render(&mut canvas);
 			player.render(&mut canvas);
-			for asteroid in asteroids.iter() {
-				asteroid.render(&mut canvas);
-			}
 
 			canvas.present();
 
 			frames += 1;
 		}
 	}
-
 }

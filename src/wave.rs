@@ -1,7 +1,6 @@
 use rand::rngs::ThreadRng;
-use sdl2::render::Texture;
 
-use crate::asteroid::Asteroid;
+use crate::asteroid::Asteroids;
 
 pub struct Wave {
 	asteroid_amount: u32,
@@ -32,14 +31,13 @@ impl Wave {
 
 	pub fn start<'a>(
 		&mut self,
-		asteroid_texture: &'a Texture,
 		rng: &mut ThreadRng,
-		asteroids: &mut Vec<Asteroid<'a>>,
+		asteroids: &mut Asteroids,
 	) {
 		println!("Spawning Wave!");
 
 		for _ in 0..self.asteroid_initial_amount {
-			asteroids.push(Asteroid::new(asteroid_texture, rng));
+			asteroids.new_asteroid(rng);
 		}
 
 		self.last_asteroid = std::time::Instant::now();
@@ -48,9 +46,8 @@ impl Wave {
 
 	pub fn update<'a>(
 		&mut self,
-		asteroid_texture: &'a Texture,
 		rng: &mut ThreadRng,
-		asteroids: &mut Vec<Asteroid<'a>>,
+		asteroids: &mut Asteroids,
 	) -> bool {
 		let now = std::time::Instant::now();
 
@@ -65,7 +62,7 @@ impl Wave {
 		let spawn_amount = f64::floor(duration_since / self.time_between_asteroid) as u32;
 
 		for _ in 0..spawn_amount {
-			asteroids.push(Asteroid::new(asteroid_texture, rng));
+			asteroids.new_asteroid(rng);
 			self.asteroids_spawned += 1;
 			self.last_asteroid = now;
 		}
