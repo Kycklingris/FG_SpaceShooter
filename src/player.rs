@@ -92,17 +92,15 @@ impl<'a> Player<'a> {
 		) * 180.0 / PI;
 	}
 
-	#[inline]
 	pub fn set_position(&mut self, x: f64, y: f64) {
 		self.sprite.set_position(x, y);
 	}
 
-	#[inline]
 	pub fn set_mouse_position(&mut self, x: i32, y: i32) {
 		self.mouse_position = sdl2::rect::Point::new(x, y);
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn update_health(&mut self, change: i32) {
 		self.health += change;
 
@@ -114,7 +112,6 @@ impl<'a> Player<'a> {
 		}
 	}
 
-	#[inline]
 	pub fn fire(&mut self, x: i32, y: i32) {
 		let now = std::time::Instant::now();
 
@@ -142,7 +139,6 @@ impl<'a> Player<'a> {
 		self.bullets.push(bullet);
 	}
 
-	#[inline(always)]
 	pub fn render(&self, canvas: &mut WindowCanvas) {
 		for bullet in self.bullets.iter() {
 			bullet.render(canvas);

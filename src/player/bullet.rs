@@ -45,7 +45,6 @@ impl<'a> Bullet<'a> {
 		false
 	}
 
-	#[inline]
 	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {
 		self.sprite.render(canvas);
 	}

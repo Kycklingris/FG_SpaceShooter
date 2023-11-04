@@ -13,11 +13,7 @@ pub struct Asteroid<'a> {
 }
 
 impl<'a> Asteroid<'a> {
-	pub fn new(
-		texture: &'a sdl2::render::Texture<'a>,
-		rng: &mut ThreadRng,
-
-	) -> Self {
+	pub fn new(texture: &'a sdl2::render::Texture<'a>, rng: &mut ThreadRng) -> Self {
 		let on_width = rng.gen_bool(0.5);
 		let position = if on_width {
 			let y = if rng.gen_bool(0.5) {
@@ -42,21 +38,15 @@ impl<'a> Asteroid<'a> {
 			rng.gen_range((F64_LOGICAL_HEIGHT * 0.10)..=(F64_LOGICAL_HEIGHT * 0.90)),
 		);
 
-		let mut direction = (
-			target.0 - position.0,
-			target.1 - position.1,
-		);
+		let mut direction = (target.0 - position.0, target.1 - position.1);
 
 		let length = f64::sqrt((direction.0 * direction.0) + (direction.1 * direction.1));
 
-		direction = (
-			direction.0 / length,
-			direction.1 / length,
-		);
+		direction = (direction.0 / length, direction.1 / length);
 
 		let speed = rng.gen_range(50.0..=400.0);
 
-		let mut sprite = crate::sprite::Sprite::new(texture, None, 64, 64);		
+		let mut sprite = crate::sprite::Sprite::new(texture, None, 64, 64);
 		sprite.set_position(position.0, position.1);
 
 		Self {
@@ -66,7 +56,7 @@ impl<'a> Asteroid<'a> {
 		}
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn update(&mut self, time_step: f64) -> bool {
 		let movement = (
 			self.direction.0 * self.speed * time_step,
@@ -90,7 +80,6 @@ impl<'a> Asteroid<'a> {
 		false
 	}
 
-	#[inline]
 	pub fn render(&self, canvas: &mut WindowCanvas) {
 		self.sprite.render(canvas);
 	}
