@@ -2,6 +2,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::render::BlendMode;
+use std::io::prelude::*;
 
 mod asteroid;
 mod player;
@@ -77,7 +78,8 @@ fn main() {
 
 	loop {
 		if should_exit {
-			println!("{:?}", frames);
+			let mut file = std::fs::File::create("frames.txt").unwrap();
+			write!(&mut file, "{:?}", frames).unwrap();
 			std::process::exit(0);
 		}
 
