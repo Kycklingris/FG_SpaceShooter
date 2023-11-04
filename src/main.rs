@@ -171,11 +171,11 @@ fn main() {
 					}
 				}
 
-				for i in bullets_to_remove.iter() {
+				for i in bullets_to_remove.iter().rev() {
 					bullets.remove_at(*i);
 				}
 
-				for i in asteroids_to_remove.iter() {
+				for i in asteroids_to_remove.iter().rev() {
 					asteroids.remove_at(*i);
 				}
 			}

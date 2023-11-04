@@ -56,6 +56,11 @@ impl<'a> Bullets<'a> {
 				indices_to_remove.push(i);
 			}
 		}
+
+		
+		for i in indices_to_remove.iter().rev() {
+			self.remove_at(*i);
+		}
 	}
 
 	#[inline]

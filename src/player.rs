@@ -96,10 +96,10 @@ impl<'a> Player<'a> {
 	pub fn update_health(&mut self, change: i32) {
 		self.health += change;
 
-		println!("Hit!");
+		// println!("Hit!");
 
 		if self.health <= 0 {
-			println!("Dead!");
+			// println!("Dead!");
 			if !cfg!(feature = "benchmark") {
 				std::process::exit(0);
 			}
