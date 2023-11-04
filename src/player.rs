@@ -108,7 +108,9 @@ impl<'a> Player<'a> {
 
 		if self.health <= 0 {
 			println!("Dead!");
-			std::process::exit(0);
+			if !cfg!(feature = "benchmark") {
+				std::process::exit(0);
+			}
 		}
 	}
 

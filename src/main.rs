@@ -73,8 +73,11 @@ fn main() {
 
 	let mut should_exit = false;
 
+	let mut frames: u64 = 0;
+
 	loop {
 		if should_exit {
+			println!("{:?}", frames);
 			std::process::exit(0);
 		}
 
@@ -134,6 +137,10 @@ fn main() {
 			let time_step = now.duration_since(last_update).as_secs_f64();
 			last_update = now;
 
+			if cfg!(feature = "benchmark") {
+				player.fire(LOGICAL_WIDTH as i32 / 2, 0);
+			}
+
 			player.update(time_step);
 
 			let mut asteroids_to_remove = Vec::new();
@@ -152,7 +159,9 @@ fn main() {
 				if waves[current_wave_index].update(&asteroid_texture, &mut rng, &mut asteroids) {
 					if current_wave_index < waves.len()-1 {
 						current_wave_index += 1;
-					} 
+					} else if cfg!(feature = "benchmark") {
+						should_exit = true;
+					}
 
 					waves[current_wave_index].start(&asteroid_texture, &mut rng, &mut asteroids);
 				}
