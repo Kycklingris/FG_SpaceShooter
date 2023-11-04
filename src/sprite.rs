@@ -26,23 +26,19 @@ impl<'a> Sprite<'a> {
 		}
 	}
 
-	#[inline]
 	pub fn update_position(&mut self, x: f64, y: f64) {
 		self.position.0 += x;
 		self.position.1 += y;
 	}
 
-	#[inline]
 	pub fn set_position(&mut self, x: f64, y: f64) {
 		self.position = (x, y);
 	}
 
-	#[inline]
 	pub fn get_position(&self) -> (f64, f64) {
 		self.position
 	}
 
-	#[inline]
 	pub fn get_dst_rect(&self) -> sdl2::rect::Rect {
 		sdl2::rect::Rect::new(
 			self.position.0 as i32 - self.width as i32 / 2,
@@ -69,7 +65,6 @@ impl<'a> Sprite<'a> {
 		false
 	}
 
-	#[inline(always)]
 	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {
 		canvas
 			.copy_ex(
