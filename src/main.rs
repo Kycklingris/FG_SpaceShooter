@@ -220,6 +220,8 @@ fn main() {
 			}
 
 			canvas.present();
+
+			frames += 1;
 		}
 	}
 }
