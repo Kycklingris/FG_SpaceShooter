@@ -40,7 +40,7 @@ impl<'a> Player<'a> {
 		}
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn update(&mut self, time_step: f64) {
 		// Handle bullets
 		let mut to_remove = Vec::new();
@@ -142,7 +142,7 @@ impl<'a> Player<'a> {
 		self.bullets.push(bullet);
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn render(&self, canvas: &mut WindowCanvas) {
 		for bullet in self.bullets.iter() {
 			bullet.render(canvas);

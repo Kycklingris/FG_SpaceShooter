@@ -23,7 +23,7 @@ impl<'a> Bullet<'a> {
 		}
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn update(&mut self, time_step: f64) -> bool {
 		let movement = (
 			self.direction.0 * self.speed * time_step,
