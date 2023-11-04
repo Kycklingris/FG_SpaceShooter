@@ -43,7 +43,7 @@ fn main() {
 
 	let mut spaceship_texture = sprite::Sprite::load_texture(&texture_creator, SPACESHIP_TEXTURE);
 	spaceship_texture.set_blend_mode(BlendMode::Blend);
-	
+
 	let mut bullet_texture = sprite::Sprite::load_texture(&texture_creator, BULLET_TEXTURE);
 	bullet_texture.set_blend_mode(BlendMode::Blend);
 
@@ -73,8 +73,11 @@ fn main() {
 
 	let mut should_exit = false;
 
+	let mut frames: u64 = 0;
+
 	loop {
 		if should_exit {
+			println!("{:?}", frames);
 			std::process::exit(0);
 		}
 
@@ -134,12 +137,39 @@ fn main() {
 			let time_step = now.duration_since(last_update).as_secs_f64();
 			last_update = now;
 
+			if cfg!(feature = "benchmark") {
+				player.fire(LOGICAL_WIDTH as i32 / 2, 0);
+			}
+
 			player.update(time_step);
 
 			let mut asteroids_to_remove = Vec::new();
-			for (i, asteroid) in asteroids.iter_mut().enumerate() {
+			let mut bullets_to_remove = Vec::new();
+			'asteroid: for (i, asteroid) in asteroids.iter_mut().enumerate() {
+				// Update asteroid position, and check if out of bounds.
 				if asteroid.update(time_step) {
 					asteroids_to_remove.push(i);
+					continue 'asteroid;
+				}
+
+				// Check asteroid collides with any bullets.
+				for (j, bullet) in player.bullets.iter().enumerate() {
+					if bullet.sprite.check_circle_overlap(&asteroid.sprite) {
+						if bullets_to_remove.contains(&j) {
+							continue;
+						}
+						
+						asteroids_to_remove.push(i);
+						bullets_to_remove.push(j);
+
+						continue 'asteroid;
+					}
+				}
+
+				// Check for collision with player.
+				if asteroid.sprite.check_circle_overlap(&player.sprite) {
+					asteroids_to_remove.push(i);
+					player.update_health(-1);
 				}
 			}
 
@@ -147,59 +177,22 @@ fn main() {
 				asteroids.remove(*i);
 			}
 
+			for i in bullets_to_remove.iter().rev() {
+				player.bullets.remove(*i);
+			}
+
 			// Handle wave.
 			{
 				if waves[current_wave_index].update(&asteroid_texture, &mut rng, &mut asteroids) {
-					if current_wave_index < waves.len()-1 {
+					if current_wave_index < waves.len() - 1 {
 						current_wave_index += 1;
-					} 
+					} else if cfg!(feature = "benchmark") {
+						should_exit = true;
+					}
 
 					waves[current_wave_index].start(&asteroid_texture, &mut rng, &mut asteroids);
 				}
 			}
-
-			// Check collisions
-			{
-				// Bullets and asteroids
-				let mut bullets_to_remove = Vec::new();
-				let mut asteroids_to_remove = Vec::new();
-				'bullets: for (i,bullet) in player.bullets.iter().enumerate() {
-					for (j, asteroid) in asteroids.iter().enumerate() {
-						if bullet.sprite.check_circle_overlap(&asteroid.sprite) {
-							bullets_to_remove.push(i);
-
-							if !asteroids_to_remove.contains(&j) {
-								asteroids_to_remove.push(j);
-							}
-
-							continue 'bullets;
-						}
-					}
-				}
-				
-				for i in asteroids_to_remove.iter().rev() {
-					asteroids.remove(*i);
-				}
-				
-				for i in bullets_to_remove.iter().rev() {
-					player.bullets.remove(*i);
-				}
-
-				// Player
-				let mut asteroids_to_remove = Vec::new();
-				for (i, asteroid) in asteroids.iter().enumerate() {
-					if asteroid.sprite.check_circle_overlap(&player.sprite) {
-						asteroids_to_remove.push(i);
-						player.update_health(-1);
-					}
-				}
-
-				for i in asteroids_to_remove.iter().rev() {
-					asteroids.remove(*i);
-				}
-			}
-			
-			
 
 			//Clear the screen
 			canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
@@ -211,6 +204,9 @@ fn main() {
 			}
 
 			canvas.present();
+
+			frames += 1;
 		}
 	}
+
 }

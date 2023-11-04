@@ -52,13 +52,15 @@ impl<'a> Sprite<'a> {
 		)
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn check_circle_overlap(&self, other: &Self) -> bool {
-		let collision_distance = self.width as f64 / 2.0 + other.width as f64 / 2.0;
+		let mut collision_distance = self.width as f64 / 2.0 + other.width as f64 / 2.0;
+
+		collision_distance = collision_distance * collision_distance;
 
 		let x = f64::abs(self.position.0 - other.position.0);
 		let y = f64::abs(self.position.1 - other.position.1);
-		let distance_between = f64::sqrt((x * x) + (y * y));
+		let distance_between = (x * x) + (y * y);
 
 		if distance_between <= collision_distance {
 			return true;
@@ -67,7 +69,7 @@ impl<'a> Sprite<'a> {
 		false
 	}
 
-	#[inline]
+	#[inline(always)]
 	pub fn render(&self, canvas: &mut sdl2::render::WindowCanvas) {
 		canvas
 			.copy_ex(
